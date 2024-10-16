@@ -1,0 +1,29 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/suzano-poc/run-dockerfiles/suzano-cloudrun:latest'
+      - '.'
+    id: 'Build Docker Image'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/suzano-poc/run-dockerfiles/suzano-cloudrun:latest'
+    id: 'Push Image to Artifact Registry'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'financial-api'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/suzano-poc/run-dockerfiles/suzano-cloudrun:latest'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+    id: 'Deploy to Cloud Run'
