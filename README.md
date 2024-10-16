@@ -214,8 +214,11 @@ driver.quit()
 ### Etapas:
 
 1- Salve o arquivo como chinese.py (ou outro nome...)
+
 2- Baixe o seu chromedriver respectivo (driver sua versão de navegador/tipo de navegador)
+
 3- Disponibilize o chromedriver.exe (no meu caso uso o Google Chrome) na pasta raiz de onde decidir criar o arquivo chinese.py
+
 4- Execute python3 chinese.py e veja a mágica acontecer...
 
 Obs: Ele vai abrir seu navegador no site, e simular movimentos de um usuário para que possa ser mostrada na tela (dentro das tags html de tabela) todo o conteúdo de dados históricos, onde ele captura com o próprio código os dados presentes dentro dessas tags de tabela e salva eles na sqlite...
