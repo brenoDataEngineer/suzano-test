@@ -82,9 +82,13 @@ Com isso a rota executa seu processamento, que lê os dados do bucket do Cloud S
 ## Dados do cenário realizado (infos do gcp)
 
 BigQuery: https://console.cloud.google.com/bigquery?referrer=search&project=suzano-poc&ws=!1m4!1m3!3m2!1ssuzano-poc!2sfinancial_data
+
 Storage: https://console.cloud.google.com/storage/browser/suzano-financial-data?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&project=suzano-poc
+
 Cloud Run: https://console.cloud.google.com/run/detail/us-central1/financial-api/metrics?project=suzano-poc
+
 Cloud Build: https://console.cloud.google.com/cloud-build/builds?referrer=search&project=suzano-poc
+
 Cloud Scheduler: https://console.cloud.google.com/cloudscheduler?project=suzano-poc
 
 ## Como testar?
