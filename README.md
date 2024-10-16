@@ -54,15 +54,38 @@ Contudo, podemos entender rapidamente que o cenário proposto não se trata de u
 
 ### Cenário 01 - Streaming de dados
 
-<img width="1117" alt="image" src="https://github.com/user-attachments/assets/d4fd33c9-c1d4-4b5b-9ab8-a96848c447c9">
+O cenário aborda uma possível troca de fonte de csv (exportado manualmente) para um serviço de mensageria, ilustrado com o kafka.
+Com isso nos habilita a pensar em um cenário onde consumimos os dados do tópico (que dentro do pub sub podemos usar por exemplo deadletters para reter mensagens não processadas) e processamos via Dataflow, cascateando em uma latência baixa para tabelas Streaming do BigQuery e usando terraform para orquestrar a infraestrutura.
+
+<img width="1111" alt="image" src="https://github.com/user-attachments/assets/1af3f24d-5010-49db-8650-0ad1124b2e50">
+
 
 ### Cenário 02 - Batch
 
-<img width="1116" alt="Captura de Tela 2024-10-16 às 04 50 14" src="https://github.com/user-attachments/assets/6a1abf65-ae62-4d3f-9770-938a621bd73c">
+O cenário traz uma abordagem mais próxima da realidade do nosso exemplo, que com certeza seria uma boa escolha para processar os dados históricos.
+Trazemos como orquestrador o Composer (Apache Airflow) e o mesmo sendo responsável por rodar a dag em um momento do dia (d-1) para processar os dados históricos que vai extrair do Google Cloud Storage para dentro do seu código e em seguida inserir no BigQuery.
+(Podemos também inverter a ordem, onde o dataproc extrai os dados da origem para o Google Cloud Storage e usariamos um template do Airflow para criar um job de inserção no BigQuery diretamente do Google Cloud Storage)
 
-### Cenário 03 - Near Real Time
+<img width="1103" alt="image" src="https://github.com/user-attachments/assets/ce096d7c-7393-4d03-b145-53864916884d">
 
-<img width="1114" alt="image" src="https://github.com/user-attachments/assets/4abf2289-1bc2-417e-8639-f725147e6c12">
+
+### Cenário 03 - Near Real Time (Que iremos executar)
+
+O cenário traz como objetivo a criação de um microserviço (API) com diferentes rotas por tabela, para que cada fluxo seja separado por rota e por tabela.
+Onde temos o Cloud Scheduler junto do eventArc como responsáveis por engatilhar a execução da rota sempre que um arquivo cair no bucket (indicando que um novo sample de dados foi carregado).
+Ele envia um payload para a respectiva rota daquele serviço contendo os parametros necessários para a requisição.
+Com isso a rota executa seu processamento, que lê os dados do bucket do Cloud Storage e insere na tabela do BigQuery.
+
+<img width="1106" alt="image" src="https://github.com/user-attachments/assets/23267888-938e-44f2-8ee6-801da3ece597">
+
+
+## Dados do cenário realizado (infos do gcp)
+
+## Chinese Seleniu exemplo
+
+
+
+
 
 
 
