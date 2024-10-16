@@ -105,15 +105,21 @@ Basta copiar a collection e executar as requisições, pode acompanhar pelo link
 ### Via Cloud Scheduler:
 
 Pode ser rodado via Cloud Scheduler (recurso também disponibilizado acima): https://console.cloud.google.com/cloudscheduler?project=suzano-poc
+
 usd-cny: Roda a requisição para a tabela usd-cny.
+
 chinese-caixin: Roda a requisição para a tabela chinese-caixin.
+
 bcom: Roda a requisição para a tabela bcom.
 
 *INFOS:
 Endpoint Cloud Run (aberto para internet): https://financial-api-266949854628.us-central1.run.app 
+
 Rota cloud Run: POST: /load-data
-Caso queira clonar, fazer alguma alteração e rodar o cloud build, basta abrir seu terminal na pasta raiz de onde clonou o repositório e rodar: gcloud builds submit --config cloudbuild.yaml .
-Automaticamente o comando identifica nosso yaml e começa a subida.
+
+Caso queira clonar, fazer alguma alteração e rodar o cloud build, basta abrir seu terminal na pasta raiz de onde clonou o repositório e rodar: 'gcloud builds submit --config cloudbuild.yaml .'
+
+Automaticamente o comando identifica nosso yaml e começa a subida (PS: rodar sem aspas).
 
 # Conclusão:
 Para finalizar, temos os dados extraidos e carregados na origem, a arquitetura poderia evoluir para inlcuir particinamento nas tabelas, modelagens específicas etc, contudo o desafio propôs apenas o que apresentamos...
