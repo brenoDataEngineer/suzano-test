@@ -72,7 +72,7 @@ Trazemos como orquestrador o Composer (Apache Airflow) e o mesmo sendo responsá
 ### Cenário 03 - Near Real Time (Que iremos executar)
 
 O cenário traz como objetivo a criação de um microserviço (API) com uma rota de processamento que faz a ingestão dos dados em toda as tabelas.
-Onde temos o Cloud Scheduler junto do eventArc como responsáveis por engatilhar a execução da rota sempre que um arquivo cair no bucket (indicando que um novo sample de dados foi carregado).
+Onde temos o Cloud Scheduler como responsável por engatilhar a execução da rota sempre que o horário estipulado chegar.
 Ele envia um payload para a respectiva rota daquele serviço contendo os parametros necessários para a requisição.
 Com isso a rota executa seu processamento, que lê os dados do bucket do Cloud Storage e insere na tabela do BigQuery.
 
@@ -85,18 +85,153 @@ BigQuery: https://console.cloud.google.com/bigquery?referrer=search&project=suza
 Storage: https://console.cloud.google.com/storage/browser/suzano-financial-data?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&project=suzano-poc
 Cloud Run: https://console.cloud.google.com/run/detail/us-central1/financial-api/metrics?project=suzano-poc
 Cloud Build: https://console.cloud.google.com/cloud-build/builds?referrer=search&project=suzano-poc
-Cloud Scheduler: #
+Cloud Scheduler: https://console.cloud.google.com/cloudscheduler?project=suzano-poc
 
 ## Como testar?
 
-Endpoint Cloud Run (aberto para internet): https://financial-api-266949854628.us-central1.run.app 
-Rota cloud Run: POST: /load-data
+Temos duas opções para testar o serviço:
+
+### Localmente:
+
 Collection postman com os bodys de requisição para as três tabelas:
-[suzano.postman_collection.json](https://github.com/user-attachments/files/17392889/suzano.postman_collection.json){
+[suzano.postman_collection.json](https://github.com/user-attachments/files/17392889/suzano.postman_collection.json)
 
 Basta copiar a collection e executar as requisições, pode acompanhar pelo link do ambiente que deixei acima para ver a mágica acontecer.
 
+### Via Cloud Scheduler:
+
+Pode ser rodado via Cloud Scheduler (recurso também disponibilizado acima): https://console.cloud.google.com/cloudscheduler?project=suzano-poc
+usd-cny: Roda a requisição para a tabela usd-cny.
+chinese-caixin: Roda a requisição para a tabela chinese-caixin.
+bcom: Roda a requisição para a tabela bcom.
+
+*INFOS:
+Endpoint Cloud Run (aberto para internet): https://financial-api-266949854628.us-central1.run.app 
+Rota cloud Run: POST: /load-data
+Caso queira clonar, fazer alguma alteração e rodar o cloud build, basta abrir seu terminal na pasta raiz de onde clonou o repositório e rodar: gcloud builds submit --config cloudbuild.yaml .
+Automaticamente o comando identifica nosso yaml e começa a subida.
+
+# Conclusão:
+Para finalizar, temos os dados extraidos e carregados na origem, a arquitetura poderia evoluir para inlcuir particinamento nas tabelas, modelagens específicas etc, contudo o desafio propôs apenas o que apresentamos...
+
+Estou liberando o acesso do projeto do gcp para o MANUELD@suzano.com.br poder validar diretamente o que está por lá.
+O código está no repositório onde vocês lêem esse arquivo.
+
+Fico a disposição para quaisquer dúvidas posteriores.
+
+
+
+# EXTRA
+
+Para matar a curiosidade do sample do código com Selenium que comentei acima, vou colocar embaixo o código e como rodar...
+
+(PS: sei que não valia sqlite, mas como é só um exemplo e não está atrelado de maneira alguma a solução do desafio original, da um desconto ;) )
+
 ## Chinese Seleniu exemplo
+
+```
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from bs4 import BeautifulSoup
+import sqlite3
+import time
+
+service = Service('./chromedriver') 
+driver = webdriver.Chrome(service=service)
+
+url = 'https://br.investing.com/economic-calendar/chinese-caixin-services-pmi-596'
+driver.get(url)
+
+WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.ID, 'showMoreHistory596')))
+
+actions = ActionChains(driver)
+
+while True:
+    try:
+        button = WebDriverWait(driver, 1).until(EC.element_to_be_clickable((By.ID, 'showMoreHistory596')))
+        
+        actions.move_to_element(button).perform()
+        
+        button.click()
+        
+        time.sleep(5) 
+        
+    except (NoSuchElementException, TimeoutException):
+        print("No more 'Show More' button found or it's not clickable. Exiting loop.")
+        break
+
+soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+data_table = soup.find('table', {'class': 'genTbl openTbl ecHistoryTbl'})
+
+conn = sqlite3.connect('economic_data.db')
+cursor = conn.cursor()
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS economic_data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT,
+        value TEXT,
+        additional_info TEXT
+    )
+''')
+
+if data_table:
+    rows = data_table.find_all('tr')
+    for row in rows:
+        cells = row.find_all('td')
+        if len(cells) >= 3:
+            date = cells[0].text.strip()
+            value = cells[1].text.strip()
+            additional_info = cells[2].text.strip() 
+            
+            cursor.execute('''
+                INSERT INTO economic_data (date, value, additional_info) VALUES (?, ?, ?)
+            ''', (date, value, additional_info))
+
+conn.commit()
+conn.close()
+print("Data stored in the SQLite database.")
+
+driver.quit()
+```
+
+### Etapas:
+
+1- Salve o arquivo como chinese.py (ou outro nome...)
+2- Baixe o seu chromedriver respectivo (driver sua versão de navegador/tipo de navegador)
+3- Disponibilize o chromedriver.exe (no meu caso uso o Google Chrome) na pasta raiz de onde decidir criar o arquivo chinese.py
+4- Execute python3 chinese.py e veja a mágica acontecer...
+
+Obs: Ele vai abrir seu navegador no site, e simular movimentos de um usuário para que possa ser mostrada na tela (dentro das tags html de tabela) todo o conteúdo de dados históricos, onde ele captura com o próprio código os dados presentes dentro dessas tags de tabela e salva eles na sqlite...
+
+5- Depois que rodar completo, só mandar um SELECT * no banco para ver seus resultados (vide exemplo python abaixo)
+
+```
+import sqlite3
+
+conn = sqlite3.connect('economic_data.db')
+cursor = conn.cursor()
+
+cursor.execute('SELECT * FROM economic_data')
+
+rows = cursor.fetchall()
+
+for row in rows:
+    print(f"ID: {row[0]}, Date: {row[1]}, Value: {row[2]}, Additional Info: {row[3]}")
+
+conn.close()
+```
+
+_______________
+
+
+Breno Carlo Piccoli - Engenheiro de dados Senior GCP.
 
 
 
